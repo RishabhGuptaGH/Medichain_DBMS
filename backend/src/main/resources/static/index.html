@@ -1,0 +1,897 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MediChain - Healthcare Data Exchange System</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+<!-- Toast Container -->
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- ============================================================ -->
+<!-- LOGIN PAGE -->
+<!-- ============================================================ -->
+<div id="loginPage" class="login-page">
+    <button class="login-dark-toggle" onclick="toggleDarkMode()" title="Toggle Dark Mode" id="loginDarkBtn">&#9790;</button>
+    <div class="login-card">
+        <div class="login-logo">
+            <svg viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect width="56" height="56" rx="14" fill="url(#lg)"/>
+                <path d="M28 16v24M16 28h24" stroke="#fff" stroke-width="4" stroke-linecap="round"/>
+                <defs><linearGradient id="lg" x1="0" y1="0" x2="56" y2="56"><stop stop-color="#4f46e5"/><stop offset="1" stop-color="#06b6d4"/></linearGradient></defs>
+            </svg>
+            <h1>MediChain</h1>
+            <p class="login-subtitle">Healthcare Data Exchange System</p>
+        </div>
+
+        <div class="role-selector">
+            <button class="role-btn active" onclick="selectLoginRole('admin', event)">Admin</button>
+            <button class="role-btn" onclick="selectLoginRole('doctor', event)">Doctor</button>
+            <button class="role-btn" onclick="selectLoginRole('patient', event)">Patient</button>
+        </div>
+
+        <div id="loginError" class="alert alert-danger hidden"></div>
+
+        <div class="form-group">
+            <label>Username</label>
+            <input type="text" id="loginUsername" placeholder="Enter username" value="admin">
+        </div>
+        <div class="form-group">
+            <label>Password</label>
+            <input type="password" id="loginPassword" placeholder="Enter password" value="password123">
+        </div>
+
+        <button class="login-btn" onclick="login()">Sign In</button>
+
+        <div class="login-hint" id="loginHint">
+            Default: <strong>admin</strong> / password123
+        </div>
+
+        <div class="login-footer">
+            MediChain &copy; 2026 &mdash; DBMS Final Project<br>
+            Saksham Verma &bull; Rishabh Gupta &bull; Supriyo Ghosh
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- MAIN APPLICATION -->
+<!-- ============================================================ -->
+<div id="appContainer" class="hidden" style="display:none;width:100%">
+
+    <!-- Sidebar (Dynamic based on role) -->
+    <nav id="sidebar" class="sidebar"></nav>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="top-bar">
+            <h2 id="pageTitle">Dashboard</h2>
+            <div class="top-bar-actions">
+                <button class="dark-mode-btn" onclick="toggleDarkMode()" title="Toggle Dark Mode" id="appDarkBtn">&#9790;</button>
+                <div class="user-badge">
+                    <span id="topBarUser"></span>
+                    <span id="topBarRole" class="badge"></span>
+                </div>
+                <!-- <button class="btn btn-ghost btn-sm" onclick="logout()">Logout</button> -->
+            </div>
+        </div>
+
+        <div class="content-area">
+
+            <!-- ============================================================ -->
+            <!-- ADMIN: DASHBOARD -->
+            <!-- ============================================================ -->
+            <div id="sec-dashboard" class="section active">
+                <div id="dashStats" class="stats-grid"></div>
+                <div class="card">
+                    <div class="card-header"><h3>Recent Encounters</h3></div>
+                    <div class="card-body table-container">
+                        <table><thead><tr>
+                            <th>ID</th><th>Patient</th><th>Type</th><th>Date</th><th>Hospital</th>
+                        </tr></thead><tbody id="dashRecentEncounters"></tbody></table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============================================================ -->
+            <!-- ADMIN: PATIENTS -->
+            <!-- ============================================================ -->
+            <div id="sec-patients" class="section">
+                <div class="flex justify-between items-center mb-20">
+                    <input type="text" id="patientSearch" placeholder="Search patients by name, ID, or city..." style="padding:10px 16px;border:1.5px solid var(--border);border-radius:var(--radius);width:350px;font-size:0.85rem;background:var(--card);color:var(--text)" onkeyup="searchPatients()">
+                    <button class="btn btn-primary" onclick="showModal('patientModal')">+ Add Patient</button>
+                </div>
+                <div class="card">
+                    <div class="card-body table-container">
+                        <table><thead><tr>
+                            <th>Health ID</th><th>Name</th><th>Age</th><th>Gender</th><th>Blood</th><th>City</th><th>Insurance</th><th>Actions</th>
+                        </tr></thead><tbody id="patientTable"></tbody></table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============================================================ -->
+            <!-- ADMIN: DOCTORS -->
+            <!-- ============================================================ -->
+            <div id="sec-doctors" class="section">
+                <div class="flex justify-between items-center mb-20">
+                    <h3>Registered Doctors</h3>
+                    <button class="btn btn-primary" onclick="showModal('doctorModal')">+ Add Doctor</button>
+                </div>
+                <div class="card">
+                    <div class="card-body table-container">
+                        <table><thead><tr>
+                            <th>ID</th><th>Name</th><th>License</th><th>Specialization</th><th>Phone</th><th>Hospitals</th>
+                        </tr></thead><tbody id="doctorTable"></tbody></table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============================================================ -->
+            <!-- ADMIN: HOSPITALS -->
+            <!-- ============================================================ -->
+            <div id="sec-hospitals" class="section">
+                <div class="flex justify-between items-center mb-20">
+                    <h3>Registered Hospitals</h3>
+                    <button class="btn btn-primary" onclick="showModal('hospitalModal')">+ Add Hospital</button>
+                </div>
+                <div class="card">
+                    <div class="card-body table-container">
+                        <table><thead><tr>
+                            <th>ID</th><th>Name</th><th>License</th><th>Type</th><th>City</th><th>Beds</th><th>Phone</th>
+                        </tr></thead><tbody id="hospitalTable"></tbody></table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============================================================ -->
+            <!-- ADMIN: ENCOUNTERS -->
+            <!-- ============================================================ -->
+            <div id="sec-encounters" class="section">
+                <div class="flex justify-between items-center mb-20">
+                    <h3>Clinical Encounters</h3>
+                    <button class="btn btn-primary" onclick="showModal('encounterModal')">+ New Encounter</button>
+                </div>
+                <div class="card">
+                    <div class="card-body table-container">
+                        <table><thead><tr>
+                            <th>ID</th><th>Patient</th><th>Type</th><th>Date</th><th>Hospital</th><th>Doctors</th><th>Actions</th>
+                        </tr></thead><tbody id="encounterTable"></tbody></table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============================================================ -->
+            <!-- ADMIN: PRESCRIPTIONS -->
+            <!-- ============================================================ -->
+            <div id="sec-prescriptions" class="section">
+                <div class="flex justify-between items-center mb-20">
+                    <h3>Prescriptions</h3>
+                    <button class="btn btn-primary" onclick="showModal('prescriptionModal')">+ New Prescription</button>
+                </div>
+                <div id="prescriptionAlerts"></div>
+                <div class="card">
+                    <div class="card-body table-container">
+                        <table><thead><tr>
+                            <th>ID</th><th>Patient</th><th>Doctor</th><th>Date</th><th>Status</th><th>Actions</th>
+                        </tr></thead><tbody id="prescriptionTable"></tbody></table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============================================================ -->
+            <!-- ADMIN: LAB ORDERS -->
+            <!-- ============================================================ -->
+            <div id="sec-lab" class="section">
+                <div class="flex justify-between items-center mb-20">
+                    <h3>Laboratory Orders & Results</h3>
+                    <div class="flex gap-10">
+                        <button class="btn btn-danger btn-sm" onclick="loadCriticalResults()">Critical Alerts</button>
+                        <button class="btn btn-primary" onclick="showModal('labOrderModal')">+ New Lab Order</button>
+                    </div>
+                </div>
+                <div id="criticalAlerts"></div>
+                <div class="card">
+                    <div class="card-body table-container">
+                        <table><thead><tr>
+                            <th>ID</th><th>Patient</th><th>Test</th><th>Priority</th><th>Status</th><th>Doctor</th><th>Date</th><th>Actions</th>
+                        </tr></thead><tbody id="labOrderTable"></tbody></table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============================================================ -->
+            <!-- ADMIN: CONSENT & ACCESS -->
+            <!-- ============================================================ -->
+            <div id="sec-consent" class="section">
+                <div class="tabs">
+                    <div class="tab active" onclick="switchConsentTab('consents', event)">Patient Consents</div>
+                    <div class="tab" onclick="switchConsentTab('emergency', event)">Emergency Access</div>
+                </div>
+                <div id="consentTabConsents">
+                    <div class="flex justify-between items-center mb-20">
+                        <h3>Patient Consents</h3>
+                        <button class="btn btn-primary" onclick="showModal('consentModal')">+ Grant Consent</button>
+                    </div>
+                    <div class="card"><div class="card-body table-container">
+                        <table><thead><tr>
+                            <th>ID</th><th>Patient</th><th>Hospital</th><th>Access</th><th>Purpose</th><th>Effective</th><th>Expires</th><th>Status</th><th>Actions</th>
+                        </tr></thead><tbody id="consentTable"></tbody></table>
+                    </div></div>
+                </div>
+                <div id="consentTabEmergency" class="hidden">
+                    <div class="flex justify-between items-center mb-20">
+                        <h3>Emergency Access Log</h3>
+                        <button class="btn btn-danger" onclick="showModal('emergencyModal')">+ Emergency Access</button>
+                    </div>
+                    <div class="card"><div class="card-body table-container">
+                        <table><thead><tr>
+                            <th>ID</th><th>Patient</th><th>Doctor</th><th>Type</th><th>Justification</th><th>Time</th><th>Status</th><th>Actions</th>
+                        </tr></thead><tbody id="emergencyTable"></tbody></table>
+                    </div></div>
+                </div>
+            </div>
+
+            <!-- ============================================================ -->
+            <!-- ADMIN: AUDIT LOGS -->
+            <!-- ============================================================ -->
+            <div id="sec-audit" class="section">
+                <div class="flex justify-between items-center mb-20 flex-wrap gap-10">
+                    <h3>Immutable Audit Trail</h3>
+                    <div class="flex gap-10 items-center">
+                        <select id="auditFilter" onchange="loadAuditLogs()" style="padding:8px 12px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:0.84rem;background:var(--card);color:var(--text)">
+                            <option value="">All Actions</option>
+                        </select>
+                        <button class="btn btn-success btn-sm" onclick="verifyAuditChain()">Verify Chain</button>
+                        <button class="btn btn-primary btn-sm" onclick="exportAuditPDF()">Export PDF</button>
+                    </div>
+                </div>
+                <div id="auditChainResult" class="mb-20"></div>
+                <div class="card">
+                    <div class="card-body table-container">
+                        <table><thead><tr>
+                            <th>ID</th><th>Time</th><th>User</th><th>Action</th><th>Table</th><th>Record</th><th>Notes</th><th>Hash</th>
+                        </tr></thead><tbody id="auditTable"></tbody></table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============================================================ -->
+            <!-- ADMIN: TRANSACTION DEMO -->
+            <!-- ============================================================ -->
+            <div id="sec-txn-demo" class="section">
+                <div class="flex justify-between items-center mb-20">
+                    <div>
+                        <h3>Database Transaction Demo</h3>
+                        <p style="font-size:0.85rem;color:var(--text-muted);margin-top:4px">Execute real database transactions (including conflicting ones) and observe ACID properties</p>
+                    </div>
+                    <button class="btn btn-primary" id="txnRunBtn" onclick="runTransactionTests()">Run All Transaction Tests</button>
+                </div>
+                <div id="txnResults">
+                    <div class="card"><div class="card-body-padded" style="text-align:center;padding:60px;color:var(--text-muted)">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:48px;height:48px;margin:0 auto 16px;display:block;opacity:0.5"><path d="M4 4h16v16H4z"/><path d="M4 12h16"/><path d="M12 4v16"/></svg>
+                        <h4>Transaction Tests</h4>
+                        <p style="margin-top:8px;font-size:0.88rem">Click "Run All Transaction Tests" to execute 6 real database transaction scenarios demonstrating commits, rollbacks, atomicity, isolation, and conflict handling.</p>
+                        <p style="margin-top:12px;font-size:0.82rem"><strong>Tests include:</strong> Successful Commit, Rollback on Error, Atomic Multi-Table Insert, FK Constraint Rollback, Dirty Read Prevention, Lost Update Prevention</p>
+                    </div></div>
+                </div>
+            </div>
+
+            <!-- ============================================================ -->
+            <!-- DOCTOR: DASHBOARD -->
+            <!-- ============================================================ -->
+            <div id="sec-doc-dashboard" class="section">
+                <div id="docDashStats" class="stats-grid"></div>
+                <div class="card">
+                    <div class="card-header"><h3>Recent Encounters</h3></div>
+                    <div class="card-body table-container">
+                        <table><thead><tr>
+                            <th>ID</th><th>Patient</th><th>Type</th><th>Date</th><th>Hospital</th>
+                        </tr></thead><tbody id="docRecentEncounters"></tbody></table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- DOCTOR: MY PATIENTS -->
+            <div id="sec-doc-patients" class="section">
+                <h3 class="mb-20">My Patients</h3>
+                <div class="card"><div class="card-body table-container">
+                    <table><thead><tr>
+                        <th>Health ID</th><th>Name</th><th>Age</th><th>Gender</th><th>Blood</th><th>City</th><th>Actions</th>
+                    </tr></thead><tbody id="docPatientTable"></tbody></table>
+                </div></div>
+            </div>
+
+            <!-- DOCTOR: PATIENT LOOKUP -->
+            <div id="sec-doc-lookup" class="section">
+                <h3 class="mb-20">Patient Lookup</h3>
+                <div class="card mb-20">
+                    <div class="card-body-padded">
+                        <div class="flex gap-10 items-center">
+                            <input type="text" id="lookupHealthId" placeholder="Search by Health ID or name (e.g. HID-001 or Rahul)" style="padding:10px 16px;border:1.5px solid var(--border);border-radius:var(--radius);width:400px;font-size:0.9rem;background:var(--card);color:var(--text)">
+                            <button class="btn btn-primary" onclick="searchAllPatients()">Search</button>
+                        </div>
+                        <p style="margin-top:8px;font-size:0.82rem;color:var(--text-muted)">Search any patient. Full medical history requires active consent or emergency access.</p>
+                    </div>
+                </div>
+                <div id="lookupSearchResults" class="hidden card mb-20">
+                    <div class="card-header"><h3>Search Results</h3></div>
+                    <div class="card-body table-container">
+                        <table><thead><tr>
+                            <th>Health ID</th><th>Name</th><th>Age</th><th>Gender</th><th>Blood</th><th>Access</th><th>Actions</th>
+                        </tr></thead><tbody id="lookupSearchTable"></tbody></table>
+                    </div>
+                </div>
+                <div id="lookupResult"></div>
+            </div>
+
+            <!-- DOCTOR: MY ENCOUNTERS -->
+            <div id="sec-doc-encounters" class="section">
+                <div class="flex justify-between items-center mb-20">
+                    <h3>My Encounters</h3>
+                    <button class="btn btn-primary" onclick="showModal('encounterModal')">+ New Encounter</button>
+                </div>
+                <div class="card"><div class="card-body table-container">
+                    <table><thead><tr>
+                        <th>ID</th><th>Patient</th><th>Type</th><th>Date</th><th>Hospital</th><th>Role</th><th>Actions</th>
+                    </tr></thead><tbody id="docEncounterTable"></tbody></table>
+                </div></div>
+            </div>
+
+            <!-- DOCTOR: MY PRESCRIPTIONS -->
+            <div id="sec-doc-prescriptions" class="section">
+                <div class="flex justify-between items-center mb-20">
+                    <h3>My Prescriptions</h3>
+                    <button class="btn btn-primary" onclick="showModal('prescriptionModal')">+ New Prescription</button>
+                </div>
+                <div class="card"><div class="card-body table-container">
+                    <table><thead><tr>
+                        <th>ID</th><th>Patient</th><th>Date</th><th>Status</th><th>Actions</th>
+                    </tr></thead><tbody id="docPrescriptionTable"></tbody></table>
+                </div></div>
+            </div>
+
+            <!-- DOCTOR: MY LAB ORDERS -->
+            <div id="sec-doc-lab" class="section">
+                <div class="flex justify-between items-center mb-20">
+                    <h3>My Lab Orders</h3>
+                    <button class="btn btn-primary" onclick="showModal('labOrderModal')">+ New Lab Order</button>
+                </div>
+                <div class="card"><div class="card-body table-container">
+                    <table><thead><tr>
+                        <th>ID</th><th>Patient</th><th>Test</th><th>Priority</th><th>Status</th><th>Result</th><th>Critical</th>
+                    </tr></thead><tbody id="docLabTable"></tbody></table>
+                </div></div>
+            </div>
+
+            <!-- ============================================================ -->
+            <!-- PATIENT: DASHBOARD -->
+            <!-- ============================================================ -->
+            <div id="sec-pat-dashboard" class="section">
+                <div id="patDashStats" class="stats-grid"></div>
+                <div class="card">
+                    <div class="card-header"><h3>Recent Encounters</h3></div>
+                    <div class="card-body table-container">
+                        <table><thead><tr>
+                            <th>Date</th><th>Type</th><th>Hospital</th><th>Doctors</th>
+                        </tr></thead><tbody id="patRecentEncounters"></tbody></table>
+                    </div>
+                </div>
+                <div class="card mt-20">
+                    <div class="card-header"><h3>Active Allergies</h3></div>
+                    <div class="card-body table-container">
+                        <table><thead><tr>
+                            <th>Allergen</th><th>Severity</th><th>Reaction</th>
+                        </tr></thead><tbody id="patAllergyTable"></tbody></table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PATIENT: PROFILE -->
+            <div id="sec-pat-profile" class="section">
+                <div class="card mb-20"><div id="patProfileCard" class="card-body-padded"></div></div>
+            </div>
+
+            <!-- PATIENT: MY ENCOUNTERS -->
+            <div id="sec-pat-encounters" class="section">
+                <h3 class="mb-20">My Medical Encounters</h3>
+                <div class="card"><div class="card-body table-container">
+                    <table><thead><tr>
+                        <th>Date</th><th>Type</th><th>Hospital</th><th>Doctors</th><th>Diagnoses</th><th>Actions</th>
+                    </tr></thead><tbody id="patEncounterTable"></tbody></table>
+                </div></div>
+            </div>
+
+            <!-- PATIENT: MY PRESCRIPTIONS -->
+            <div id="sec-pat-prescriptions" class="section">
+                <h3 class="mb-20">My Prescriptions</h3>
+                <div id="patPrescriptionList"></div>
+            </div>
+
+            <!-- PATIENT: MY LAB RESULTS -->
+            <div id="sec-pat-lab" class="section">
+                <h3 class="mb-20">My Lab Results</h3>
+                <div class="card"><div class="card-body table-container">
+                    <table><thead><tr>
+                        <th>Date</th><th>Test</th><th>Doctor</th><th>Status</th><th>Result</th><th>Abnormal</th><th>Critical</th>
+                    </tr></thead><tbody id="patLabTable"></tbody></table>
+                </div></div>
+            </div>
+
+            <!-- PATIENT: ACCESS REQUESTS -->
+            <div id="sec-pat-access-requests" class="section">
+                <h3 class="mb-20">Doctor Access Requests</h3>
+                <p style="margin-bottom:16px;font-size:0.85rem;color:var(--text-muted)">Doctors may request access to your medical records. Review and approve or deny their requests below.</p>
+                <div id="patAccessRequestList"></div>
+            </div>
+
+            <!-- PATIENT: MY CONSENTS -->
+            <div id="sec-pat-consents" class="section">
+                <div class="flex justify-between items-center mb-20">
+                    <h3>My Consents</h3>
+                    <button class="btn btn-primary" onclick="showModal('patConsentModal')">+ Grant Consent</button>
+                </div>
+                <div class="card"><div class="card-body table-container">
+                    <table><thead><tr>
+                        <th>Hospital</th><th>Access Level</th><th>Purpose</th><th>Effective</th><th>Expires</th><th>Status</th><th>Actions</th>
+                    </tr></thead><tbody id="patConsentTable"></tbody></table>
+                </div></div>
+            </div>
+
+        </div> <!-- /content-area -->
+    </div> <!-- /main-content -->
+</div> <!-- /appContainer -->
+
+<!-- ============================================================ -->
+<!-- MODALS (Shared) -->
+<!-- ============================================================ -->
+
+<!-- Patient Modal -->
+<div id="patientModal" class="modal-overlay" onclick="if(event.target===this)closeModal('patientModal')">
+    <div class="modal">
+        <div class="modal-header"><h3>Register New Patient</h3><button class="modal-close" onclick="closeModal('patientModal')">&times;</button></div>
+        <div class="modal-body">
+            <div class="form-row">
+                <div class="form-group"><label>Health ID *</label><input id="pHealthId" placeholder="e.g. HID-009"></div>
+                <div class="form-group"><label>First Name *</label><input id="pFname"></div>
+                <div class="form-group"><label>Middle Name</label><input id="pMname"></div>
+                <div class="form-group"><label>Last Name *</label><input id="pLname"></div>
+            </div>
+            <div class="form-row">
+                <div class="form-group"><label>Date of Birth *</label><input type="date" id="pDob"></div>
+                <div class="form-group"><label>Gender *</label><select id="pGender"><option value="M">Male</option><option value="F">Female</option><option value="O">Other</option></select></div>
+                <div class="form-group"><label>Blood Group</label><select id="pBlood"><option value="">--</option><option>A+</option><option>A-</option><option>B+</option><option>B-</option><option>AB+</option><option>AB-</option><option>O+</option><option>O-</option></select></div>
+            </div>
+            <div class="form-row">
+                <div class="form-group"><label>Street</label><input id="pStreet"></div>
+                <div class="form-group"><label>City</label><input id="pCity"></div>
+                <div class="form-group"><label>State</label><input id="pState"></div>
+                <div class="form-group"><label>Postal Code</label><input id="pPostal"></div>
+            </div>
+            <div class="form-row">
+                <div class="form-group"><label>Emergency Contact</label><input id="pEmName"></div>
+                <div class="form-group"><label>Emergency Phone</label><input id="pEmPhone"></div>
+            </div>
+            <div class="form-row">
+                <div class="form-group"><label>Insurance Provider</label><input id="pInsProvider"></div>
+                <div class="form-group"><label>Insurance Start</label><input type="date" id="pInsStart"></div>
+                <div class="form-group"><label>Insurance End</label><input type="date" id="pInsEnd"></div>
+                <div class="form-group"><label>Policy Type</label><input id="pPolicyType"></div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-ghost" onclick="closeModal('patientModal')">Cancel</button>
+            <button class="btn btn-primary" onclick="createPatient()">Register Patient</button>
+        </div>
+    </div>
+</div>
+
+<!-- Doctor Modal -->
+<div id="doctorModal" class="modal-overlay" onclick="if(event.target===this)closeModal('doctorModal')">
+    <div class="modal">
+        <div class="modal-header"><h3>Register New Doctor</h3><button class="modal-close" onclick="closeModal('doctorModal')">&times;</button></div>
+        <div class="modal-body">
+            <div class="form-row">
+                <div class="form-group"><label>License Number *</label><input id="dLicense"></div>
+                <div class="form-group"><label>Full Name *</label><input id="dName"></div>
+            </div>
+            <div class="form-row">
+                <div class="form-group"><label>Phone</label><input id="dPhone"></div>
+                <div class="form-group"><label>Email</label><input id="dEmail"></div>
+                <div class="form-group"><label>Date of Birth</label><input type="date" id="dDob"></div>
+                <div class="form-group"><label>Specialization</label><input id="dSpec" placeholder="e.g. Cardiology"></div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-ghost" onclick="closeModal('doctorModal')">Cancel</button>
+            <button class="btn btn-primary" onclick="createDoctor()">Register Doctor</button>
+        </div>
+    </div>
+</div>
+
+<!-- Hospital Modal -->
+<div id="hospitalModal" class="modal-overlay" onclick="if(event.target===this)closeModal('hospitalModal')">
+    <div class="modal">
+        <div class="modal-header"><h3>Register New Hospital</h3><button class="modal-close" onclick="closeModal('hospitalModal')">&times;</button></div>
+        <div class="modal-body">
+            <div class="form-row">
+                <div class="form-group"><label>Hospital Name *</label><input id="hName"></div>
+                <div class="form-group"><label>License Number *</label><input id="hLicense"></div>
+            </div>
+            <div class="form-row">
+                <div class="form-group"><label>Phone</label><input id="hPhone"></div>
+                <div class="form-group"><label>Email</label><input id="hEmail"></div>
+                <div class="form-group"><label>Bed Capacity</label><input type="number" id="hBeds"></div>
+                <div class="form-group"><label>Facility Type</label>
+                    <select id="hType"><option>General Hospital</option><option>Specialty Hospital</option><option>Teaching Hospital</option><option>Trauma Center</option><option>Primary Health Center</option></select>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group"><label>Street</label><input id="hStreet"></div>
+                <div class="form-group"><label>City</label><input id="hCity"></div>
+                <div class="form-group"><label>State</label><input id="hState"></div>
+                <div class="form-group"><label>Postal Code</label><input id="hPostal"></div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-ghost" onclick="closeModal('hospitalModal')">Cancel</button>
+            <button class="btn btn-primary" onclick="createHospital()">Register Hospital</button>
+        </div>
+    </div>
+</div>
+
+<!-- Encounter Modal -->
+<div id="encounterModal" class="modal-overlay" onclick="if(event.target===this)closeModal('encounterModal')">
+    <div class="modal">
+        <div class="modal-header"><h3>Create New Encounter</h3><button class="modal-close" onclick="closeModal('encounterModal')">&times;</button></div>
+        <div class="modal-body">
+            <div class="form-row">
+                <div class="form-group"><label>Patient *</label><select id="eHealthId"></select></div>
+                <div class="form-group"><label>Hospital *</label><select id="eHospital"></select></div>
+            </div>
+            <div class="form-row">
+                <div class="form-group"><label>Date & Time *</label><input type="datetime-local" id="eDateTime"></div>
+                <div class="form-group"><label>Type *</label>
+                    <select id="eType"><option>Outpatient</option><option>Inpatient</option><option>Emergency</option><option>Follow-up</option></select>
+                </div>
+                <div class="form-group"><label>Primary Doctor *</label><select id="eDoctor"></select></div>
+            </div>
+            <div class="form-row">
+                <div class="form-group"><label>Bed Number (Inpatient)</label><input id="eBed"></div>
+            </div>
+            <div class="form-group"><label>Chief Complaint</label><textarea id="eComplaint" rows="2"></textarea></div>
+            <div class="form-group"><label>Treatment Plan</label><textarea id="ePlan" rows="2"></textarea></div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-ghost" onclick="closeModal('encounterModal')">Cancel</button>
+            <button class="btn btn-primary" onclick="createEncounter()">Create Encounter</button>
+        </div>
+    </div>
+</div>
+
+<!-- Prescription Modal -->
+<div id="prescriptionModal" class="modal-overlay" onclick="if(event.target===this)closeModal('prescriptionModal')">
+    <div class="modal">
+        <div class="modal-header"><h3>Create Prescription</h3><button class="modal-close" onclick="closeModal('prescriptionModal')">&times;</button></div>
+        <div class="modal-body">
+            <div class="form-row">
+                <div class="form-group"><label>Encounter ID *</label><input type="number" id="rxEncounter"></div>
+                <div class="form-group"><label>Doctor *</label><select id="rxDoctor"></select></div>
+            </div>
+            <div class="form-row">
+                <div class="form-group"><label>Start Date</label><input type="date" id="rxStart"></div>
+                <div class="form-group"><label>End Date</label><input type="date" id="rxEnd"></div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-ghost" onclick="closeModal('prescriptionModal')">Cancel</button>
+            <button class="btn btn-primary" onclick="createPrescription()">Create Prescription</button>
+        </div>
+    </div>
+</div>
+
+<!-- Add Medication Modal -->
+<div id="addMedModal" class="modal-overlay" onclick="if(event.target===this)closeModal('addMedModal')">
+    <div class="modal">
+        <div class="modal-header"><h3>Add Medication</h3><button class="modal-close" onclick="closeModal('addMedModal')">&times;</button></div>
+        <div class="modal-body">
+            <div id="medAlerts"></div>
+            <input type="hidden" id="medRxId">
+            <div class="form-row">
+                <div class="form-group"><label>Medication *</label><select id="medSelect" onchange="checkMedSafety()"></select></div>
+                <div class="form-group"><label>Dosage Strength</label><input id="medDosage" placeholder="e.g. 500mg"></div>
+            </div>
+            <div class="form-row">
+                <div class="form-group"><label>Form</label><input id="medForm" placeholder="e.g. Tablet"></div>
+                <div class="form-group"><label>Frequency</label><input id="medFreq" placeholder="e.g. Twice daily"></div>
+            </div>
+            <div class="form-row">
+                <div class="form-group"><label>Duration (days)</label><input type="number" id="medDuration"></div>
+                <div class="form-group"><label>Quantity</label><input type="number" id="medQty"></div>
+            </div>
+            <div class="form-group"><label>Instructions</label><textarea id="medInstructions" rows="2"></textarea></div>
+            <div id="overrideSection" class="hidden">
+                <div class="alert alert-danger">Safety alert detected. Override requires justification.</div>
+                <div class="form-group"><label><input type="checkbox" id="medAllergyOverride"> Override Allergy Alert</label></div>
+                <div class="form-group"><label><input type="checkbox" id="medInteractionOverride"> Override Interaction Alert</label></div>
+                <div class="form-group"><label>Override Justification *</label><textarea id="medOverrideJustification" rows="2"></textarea></div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-ghost" onclick="closeModal('addMedModal')">Cancel</button>
+            <button class="btn btn-primary" onclick="addMedication()">Add Medication</button>
+        </div>
+    </div>
+</div>
+
+<!-- Lab Order Modal -->
+<div id="labOrderModal" class="modal-overlay" onclick="if(event.target===this)closeModal('labOrderModal')">
+    <div class="modal">
+        <div class="modal-header"><h3>Create Lab Order</h3><button class="modal-close" onclick="closeModal('labOrderModal')">&times;</button></div>
+        <div class="modal-body">
+            <div class="form-row">
+                <div class="form-group"><label>Encounter ID *</label><input type="number" id="loEncounter"></div>
+                <div class="form-group"><label>Doctor *</label><select id="loDoctor"></select></div>
+            </div>
+            <div class="form-row">
+                <div class="form-group"><label>Test *</label><select id="loTest"></select></div>
+                <div class="form-group"><label>Priority *</label>
+                    <select id="loPriority"><option>Routine</option><option>Urgent</option><option>Stat</option></select>
+                </div>
+            </div>
+            <div class="form-group"><label>Clinical Info</label><textarea id="loClinicalInfo" rows="2"></textarea></div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-ghost" onclick="closeModal('labOrderModal')">Cancel</button>
+            <button class="btn btn-primary" onclick="createLabOrder()">Create Order</button>
+        </div>
+    </div>
+</div>
+
+<!-- Lab Result Modal -->
+<div id="labResultModal" class="modal-overlay" onclick="if(event.target===this)closeModal('labResultModal')">
+    <div class="modal">
+        <div class="modal-header"><h3>Enter Lab Result</h3><button class="modal-close" onclick="closeModal('labResultModal')">&times;</button></div>
+        <div class="modal-body">
+            <input type="hidden" id="lrOrderId">
+            <div class="form-row">
+                <div class="form-group"><label>Result Value *</label><input id="lrValue"></div>
+                <div class="form-group"><label>Unit</label><input id="lrUnit" placeholder="e.g. mg/dL"></div>
+            </div>
+            <div class="form-row">
+                <div class="form-group"><label>Reference Range</label><input id="lrRange" placeholder="e.g. 70-100"></div>
+                <div class="form-group"><label>Verified By (Doctor ID)</label><input type="number" id="lrVerifiedBy"></div>
+            </div>
+            <div class="form-row">
+                <div class="form-group"><label><input type="checkbox" id="lrAbnormal"> Abnormal</label></div>
+                <div class="form-group"><label><input type="checkbox" id="lrCritical"> Critical</label></div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-ghost" onclick="closeModal('labResultModal')">Cancel</button>
+            <button class="btn btn-primary" onclick="addLabResult()">Submit Result</button>
+        </div>
+    </div>
+</div>
+
+<!-- Consent Modal -->
+<div id="consentModal" class="modal-overlay" onclick="if(event.target===this)closeModal('consentModal')">
+    <div class="modal">
+        <div class="modal-header"><h3>Grant Consent</h3><button class="modal-close" onclick="closeModal('consentModal')">&times;</button></div>
+        <div class="modal-body">
+            <div class="form-row">
+                <div class="form-group"><label>Patient *</label><select id="cPatient"></select></div>
+                <div class="form-group"><label>Hospital *</label><select id="cHospital"></select></div>
+            </div>
+            <div class="form-row">
+                <div class="form-group"><label>Access Level *</label>
+                    <select id="cAccess"><option>Basic</option><option>Restricted</option><option>Full</option></select>
+                </div>
+                <div class="form-group"><label>Purpose</label><input id="cPurpose" placeholder="e.g. Ongoing treatment"></div>
+            </div>
+            <div class="form-row">
+                <div class="form-group"><label>Effective Date *</label><input type="date" id="cEffective"></div>
+                <div class="form-group"><label>Expiration Date</label><input type="date" id="cExpiration"></div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-ghost" onclick="closeModal('consentModal')">Cancel</button>
+            <button class="btn btn-primary" onclick="createConsent()">Grant Consent</button>
+        </div>
+    </div>
+</div>
+
+<!-- Emergency Access Modal -->
+<div id="emergencyModal" class="modal-overlay" onclick="if(event.target===this)closeModal('emergencyModal')">
+    <div class="modal">
+        <div class="modal-header"><h3 style="color:var(--danger)">Emergency Access</h3><button class="modal-close" onclick="closeModal('emergencyModal')">&times;</button></div>
+        <div class="modal-body">
+            <div class="alert alert-warning">Emergency access bypasses consent. All access is permanently logged and reviewed.</div>
+            <div class="form-row">
+                <div class="form-group"><label>Patient *</label><select id="emPatient"></select></div>
+                <div class="form-group"><label>Doctor *</label><select id="emDoctor"></select></div>
+            </div>
+            <div class="form-group"><label>Emergency Type *</label><input id="emType" placeholder="e.g. Cardiac Arrest, Trauma"></div>
+            <div class="form-group"><label>Justification *</label><textarea id="emJustification" rows="3"></textarea></div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-ghost" onclick="closeModal('emergencyModal')">Cancel</button>
+            <button class="btn btn-danger" onclick="requestEmergencyAccess()">Invoke Emergency Access</button>
+        </div>
+    </div>
+</div>
+
+<!-- Vitals Modal -->
+<div id="vitalsModal" class="modal-overlay" onclick="if(event.target===this)closeModal('vitalsModal')">
+    <div class="modal">
+        <div class="modal-header"><h3>Record Vital Signs</h3><button class="modal-close" onclick="closeModal('vitalsModal')">&times;</button></div>
+        <div class="modal-body">
+            <input type="hidden" id="vEncId">
+            <div class="form-row">
+                <div class="form-group"><label>BP Systolic</label><input type="number" id="vSys" placeholder="50-250"></div>
+                <div class="form-group"><label>BP Diastolic</label><input type="number" id="vDia" placeholder="30-150"></div>
+                <div class="form-group"><label>Pulse</label><input type="number" id="vPulse" placeholder="20-250"></div>
+                <div class="form-group"><label>Temperature (C)</label><input type="number" step="0.1" id="vTemp" placeholder="30-45"></div>
+            </div>
+            <div class="form-row">
+                <div class="form-group"><label>Respiratory Rate</label><input type="number" id="vRR" placeholder="5-60"></div>
+                <div class="form-group"><label>Height (cm)</label><input type="number" step="0.01" id="vHeight"></div>
+                <div class="form-group"><label>Weight (kg)</label><input type="number" step="0.01" id="vWeight"></div>
+                <div class="form-group"><label>O2 Saturation (%)</label><input type="number" id="vO2" placeholder="50-100"></div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-ghost" onclick="closeModal('vitalsModal')">Cancel</button>
+            <button class="btn btn-primary" onclick="recordVitals()">Record Vitals</button>
+        </div>
+    </div>
+</div>
+
+<!-- Detail View Modal (Reusable) -->
+<div id="detailModal" class="modal-overlay" onclick="if(event.target===this)closeModal('detailModal')">
+    <div class="modal" style="max-width:900px">
+        <div class="modal-header"><h3 id="detailModalTitle">Details</h3><button class="modal-close" onclick="closeModal('detailModal')">&times;</button></div>
+        <div class="modal-body" id="detailModalBody"></div>
+    </div>
+</div>
+
+<!-- Emergency Access Modal -->
+<div id="emergencyAccessModal" class="modal-overlay" onclick="if(event.target===this)closeModal('emergencyAccessModal')">
+    <div class="modal">
+        <div class="modal-header" style="background:var(--danger);color:#fff"><h3>Emergency Access Request</h3><button class="modal-close" onclick="closeModal('emergencyAccessModal')" style="color:#fff">&times;</button></div>
+        <div class="modal-body">
+            <div class="alert alert-danger"><strong>Warning:</strong> Emergency access bypasses normal consent. This access will be logged, audited, and reviewed by administration. Misuse may result in disciplinary action.</div>
+            <input type="hidden" id="emAccessHealthId">
+            <div class="form-group"><label>Patient</label><input id="emAccessPatientName" disabled></div>
+            <div class="form-group"><label>Emergency Type *</label>
+                <select id="emAccessType">
+                    <option value="">-- Select --</option>
+                    <option value="Life-threatening">Life-threatening Emergency</option>
+                    <option value="Critical Care">Critical Care</option>
+                    <option value="Acute Emergency">Acute Emergency</option>
+                    <option value="Urgent Consultation">Urgent Consultation</option>
+                </select>
+            </div>
+            <div class="form-group"><label>Justification * <small style="color:var(--text-muted)">(minimum 20 characters)</small></label>
+                <textarea id="emAccessJustification" rows="3" style="width:100%;padding:10px;border:1.5px solid var(--border);border-radius:var(--radius);background:var(--card);color:var(--text);resize:vertical" placeholder="Describe the clinical emergency requiring immediate access..."></textarea>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-ghost" onclick="closeModal('emergencyAccessModal')">Cancel</button>
+            <button class="btn btn-danger" onclick="submitEmergencyAccess()">Request Emergency Access</button>
+        </div>
+    </div>
+</div>
+
+<!-- Regular Access Request Modal (Doctor) -->
+<div id="regularAccessModal" class="modal-overlay" onclick="if(event.target===this)closeModal('regularAccessModal')">
+    <div class="modal">
+        <div class="modal-header" style="background:var(--primary);color:#fff"><h3>Request Patient Access</h3><button class="modal-close" onclick="closeModal('regularAccessModal')" style="color:#fff">&times;</button></div>
+        <div class="modal-body">
+            <div class="alert alert-info">This request will be sent to the patient for approval. Once approved, you will be able to view their complete medical history. This is logged in the audit trail.</div>
+            <input type="hidden" id="regAccessHealthId">
+            <div class="form-group"><label>Patient</label><input id="regAccessPatientName" disabled></div>
+            <div class="form-group"><label>Reason for Access * <small style="color:var(--text-muted)">(minimum 10 characters)</small></label>
+                <textarea id="regAccessReason" rows="3" style="width:100%;padding:10px;border:1.5px solid var(--border);border-radius:var(--radius);background:var(--card);color:var(--text);resize:vertical" placeholder="Describe why you need access to this patient's records (e.g., referral from another doctor, follow-up consultation, second opinion)..."></textarea>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-ghost" onclick="closeModal('regularAccessModal')">Cancel</button>
+            <button class="btn btn-primary" onclick="submitRegularAccess()">Send Access Request</button>
+        </div>
+    </div>
+</div>
+
+<!-- Patient Profile Edit Modal -->
+<div id="patProfileEditModal" class="modal-overlay" onclick="if(event.target===this)closeModal('patProfileEditModal')">
+    <div class="modal">
+        <div class="modal-header"><h3>Edit My Profile</h3><button class="modal-close" onclick="closeModal('patProfileEditModal')">&times;</button></div>
+        <div class="modal-body">
+            <div class="alert alert-info">You can update your contact and insurance information. Clinical data (name, DOB, gender, blood group) can only be changed by an administrator.</div>
+            <h4 style="margin-bottom:12px">Address</h4>
+            <div class="form-row">
+                <div class="form-group"><label>Street</label><input id="patEditStreet"></div>
+                <div class="form-group"><label>City</label><input id="patEditCity"></div>
+            </div>
+            <div class="form-row">
+                <div class="form-group"><label>State</label><input id="patEditState"></div>
+                <div class="form-group"><label>Postal Code</label><input id="patEditPostal"></div>
+            </div>
+            <h4 style="margin:16px 0 12px">Emergency Contact</h4>
+            <div class="form-row">
+                <div class="form-group"><label>Contact Name</label><input id="patEditEmName"></div>
+                <div class="form-group"><label>Contact Phone</label><input id="patEditEmPhone"></div>
+            </div>
+            <h4 style="margin:16px 0 12px">Insurance</h4>
+            <div class="form-row">
+                <div class="form-group"><label>Insurance Provider</label><input id="patEditInsProvider"></div>
+                <div class="form-group"><label>Policy Type</label><input id="patEditPolicyType"></div>
+            </div>
+            <div class="form-row">
+                <div class="form-group"><label>Insurance Start</label><input type="date" id="patEditInsStart"></div>
+                <div class="form-group"><label>Insurance End</label><input type="date" id="patEditInsEnd"></div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-ghost" onclick="closeModal('patProfileEditModal')">Cancel</button>
+            <button class="btn btn-primary" onclick="updatePatProfile()">Save Changes</button>
+        </div>
+    </div>
+</div>
+
+<!-- Patient Consent Edit Modal -->
+<div id="patConsentEditModal" class="modal-overlay" onclick="if(event.target===this)closeModal('patConsentEditModal')">
+    <div class="modal">
+        <div class="modal-header"><h3>Edit Consent</h3><button class="modal-close" onclick="closeModal('patConsentEditModal')">&times;</button></div>
+        <div class="modal-body">
+            <input type="hidden" id="patCEditId">
+            <div class="form-group"><label>Hospital</label><input id="patCEditHospital" disabled></div>
+            <div class="form-group"><label>Access Level *</label>
+                <select id="patCEditAccess"><option>Basic</option><option>Restricted</option><option>Full</option></select>
+            </div>
+            <div class="form-group"><label>Purpose</label><input id="patCEditPurpose" placeholder="e.g. Ongoing treatment"></div>
+            <div class="form-group"><label>Expiration Date</label><input type="date" id="patCEditExpiration"></div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-ghost" onclick="closeModal('patConsentEditModal')">Cancel</button>
+            <button class="btn btn-primary" onclick="patUpdateConsent()">Update Consent</button>
+        </div>
+    </div>
+</div>
+
+<!-- Patient Consent Grant Modal -->
+<div id="patConsentModal" class="modal-overlay" onclick="if(event.target===this)closeModal('patConsentModal')">
+    <div class="modal">
+        <div class="modal-header"><h3>Grant Consent</h3><button class="modal-close" onclick="closeModal('patConsentModal')">&times;</button></div>
+        <div class="modal-body">
+            <div class="alert alert-info">You control who can access your medical data. Grant consent to allow a hospital to view your records.</div>
+            <div class="form-row">
+                <div class="form-group"><label>Hospital *</label><select id="patCHospital"></select></div>
+                <div class="form-group"><label>Access Level *</label>
+                    <select id="patCAccess"><option>Basic</option><option>Restricted</option><option>Full</option></select>
+                </div>
+            </div>
+            <div class="form-group"><label>Purpose</label><input id="patCPurpose" placeholder="e.g. Ongoing treatment, Insurance processing"></div>
+            <div class="form-row">
+                <div class="form-group"><label>Effective Date *</label><input type="date" id="patCEffective"></div>
+                <div class="form-group"><label>Expiration Date</label><input type="date" id="patCExpiration"></div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-ghost" onclick="closeModal('patConsentModal')">Cancel</button>
+            <button class="btn btn-primary" onclick="patGrantConsent()">Grant Consent</button>
+        </div>
+    </div>
+</div>
+
+<!-- jsPDF for PDF Export -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<script src="/js/app.js"></script>
+</body>
+</html>

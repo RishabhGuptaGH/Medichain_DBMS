@@ -1,0 +1,252 @@
+DATABASE MANAGEMENT SYSTEMS PROJECT
+TASK 1: PROJECT SCOPE AND BUSINESS
+REQUIREMENTS
+Project Title: MediChain – Healthcare Data Exchange System (DBMS
+Project)
+Course: Database Management Systems
+Semester: Spring 2026
+Submission Date: January 19, 2026
+Project Group Number: 100
+Tutorial Group: 8
+TA: Gour Krishna Dey
+Venue: C03
+BUSINESS REQUIREMENTS
+System Overview
+The healthcare sector faces significant challenges in managing patient medical records across multiple
+providers, ensuring data security, and providing authorized access to complete patient information.
+Medical records are fragmented across different facilities, leading to incomplete histories, duplicate
+tests, medication errors, and compromised care quality. Patients lack control over who accesses their
+sensitive health information, and healthcare providers struggle with verifying record authenticity and
+detecting unauthorized modifications.
+MediChain addresses these challenges by providing a comprehensive healthcare data management
+platform that logically centralizes patient medical records through a unified relational database while
+supporting controlled, consent-based access across institutions. The system ensures data integrity
+through tamper-evident mechanisms and gives patients complete control over access to their health
+information. It maintains detailed records of all patient-provider interactions, tracks medications with
+automated safety checks, manages laboratory test orders and results, implements intelligent consent
+mechanisms, provides emergency access protocols for critical care, and maintains an immutable audit
+trail with tamper detection capabilities.
+We chose this domain because healthcare systems highlight the importance of data integrity, access
+control, and auditing, which aligns strongly with the core objectives of this DBMS course.
+Project Scope
+The scope of MediChain for this project is limited to the design and implementation of a databasecentric healthcare information system, with emphasis on data modeling, integrity constraints, access
+control, and auditability. This task focuses on high-level business requirements and scope definition;
+detailed schema design, SQL queries, triggers, and transactions will be formally addressed in
+subsequent tasks.
+In-Scope
+Patient registration and unique health ID management
+Clinical encounters including outpatient, inpatient, and emergency visits
+Prescription and medication tracking with automated safety checks
+Laboratory test ordering and result management
+Patient consent mechanisms and emergency access logging
+Comprehensive audit logging of data access and modifications
+Role-based access control for patients, doctors, nurses, pharmacists, and administrators
+Out-of-Scope
+Integration with external hospital electronic medical record systems
+Medical image storage and retrieval for MRI, CT scans, or X-rays
+Online payment processing or insurance claim settlement
+Artificial intelligence based diagnostics or predictive analytics
+National or cross-country health data exchange networks
+These features are intentionally excluded to keep the project focused on core DBMS concepts such as
+schema design, integrity constraints, transactions, and access control rather than external system
+integration or advanced analytics.
+Patient Registration and Management
+When an individual first seeks medical care at any participating healthcare facility, they must be
+registered in the MediChain system. Each patient is assigned a government-issued health identification
+number that serves as their unique identifier across all facilities, preventing duplicate registrations.
+The registration captures the patient's complete name, date of birth, gender, blood group if known, and
+multiple contact phone numbers. The system records residential address including street, city, state,
+and postal code, with support for multiple addresses designated as primary residence, secondary
+residence, or work address.
+Emergency contact information includes the name, relationship to patient, contact phone number, and
+address of persons to be notified in medical emergencies. The system maintains insurance policy
+details including provider name, policy number, policy holder name if different from the patient,
+coverage dates, and policy type. A patient may have multiple active insurance policies simultaneously,
+with the system tracking each policy's validity period.
+The system automatically calculates patient age based on date of birth for age-appropriate medical
+protocols, vaccination eligibility, medication dosing, and statistical categorization into infants, children,
+teenagers, adults, and senior citizens. All patient-related information will be stored in normalized
+relational tables with appropriate primary keys and integrity constraints to avoid duplication and
+maintain consistency.
+Healthcare Provider and Hospital Management
+Healthcare facilities register by providing hospital name, complete address, hospital license number,
+contact information, facility type, and bed capacity. Facility types include general hospital, specialty
+hospital, teaching hospital, trauma center, and primary health center. Medical practitioners register
+with their medical license number, personal information, contact details, and area of specialization
+including internal medicine, cardiology, pediatrics, orthopedics, neurology, oncology, and emergency
+medicine. A doctor may have multiple specializations and practice at multiple hospitals. This many-tomany association between doctors and hospitals will be explicitly modeled in the database using
+relationship tables.
+Healthcare facilities organize staff into clinical departments such as emergency medicine, cardiology,
+orthopedics, pediatrics, surgery, radiology, pathology, and pharmacy. Each department belongs to a
+specific hospital, and staff members are assigned to appropriate departments based on their role and
+specialization.
+Clinical Encounter Documentation
+Every patient visit is documented as a clinical encounter. When a patient arrives, staff creates an
+encounter record by selecting the patient, recording the visit date and time, assigning the treating
+doctor, and specifying the encounter type. Types include outpatient consultation, inpatient admission,
+emergency visit, and follow-up visit. For inpatient encounters, the system records admission date and
+time, assigned bed number, and eventual discharge date.
+During the encounter, nursing staff records vital signs including systolic and diastolic blood pressure,
+pulse rate, body temperature, respiratory rate, height, weight, and oxygen saturation. All measurements
+are timestamped for trend analysis. The doctor documents the chief complaint, performs systematic
+examination, and records clinical notes. Each encounter serves as a central entity linking patients,
+doctors, diagnoses, procedures, prescriptions, and laboratory orders.
+The doctor establishes diagnoses using standardized ICD-10 diagnosis codes. Multiple diagnoses can be
+recorded, classified as primary or secondary, with status indicating provisional, confirmed, or ruled out.
+Medical procedures are documented using CPT procedure codes, including procedure date, performing
+doctor, procedural notes, and any complications. The doctor determines follow-up needs and
+documents the treatment plan.
+Prescription Management and Medication Safety
+When medication is needed, the doctor creates a prescription by selecting the drug from a
+comprehensive catalog containing generic names, brand names, drug classes, dosage forms, and
+manufacturer information. The prescription specifies medication, dosage strength, dosage form,
+frequency of administration, route, duration of treatment, and total quantity to be dispensed. The
+doctor provides patient instructions including whether to take with food, activities to avoid, and what to
+do if a dose is missed.
+Before finalizing any prescription, the system performs critical safety checks. It verifies that the patient
+is not allergic to the prescribed medication by checking allergy records. Patient allergy information
+includes the allergen, reaction description, severity classification, identification date, and current
+status. If a severe or life-threatening allergy is detected, the system prevents prescription completion
+unless the doctor provides explicit override with documented justification.
+The system performs comprehensive drug interaction checking by examining all active patient
+medications against a database of known interactions categorized by severity as major, moderate, or
+minor. When a potential interaction is detected, the system generates an alert displaying both
+medications, the interaction nature, severity, and clinical recommendations. For major severity
+interactions, the system requires physician acknowledgment and clinical reasoning documentation
+before proceeding, with all override decisions permanently logged. These safety rules will later be
+enforced using database constraints and triggers to ensure correctness even under concurrent access.
+Prescriptions progress through status states including active, completed, and discontinued.
+Pharmacists retrieve prescriptions, verify patient identity, confirm validity, dispense medication, and
+record the dispensing transaction, creating a complete medication history.
+Laboratory Testing and Diagnostic Services
+When diagnostic testing is needed, doctors create laboratory orders by selecting the patient, choosing
+tests from the catalog, indicating priority level as routine, urgent, or stat, and providing relevant clinical
+information. The laboratory test catalog contains test codes, descriptive names, specimen types
+required, collection procedures, and turnaround times.
+When orders are placed, laboratory technicians record specimen collection details including collection
+date, container types, and specimen identifiers for tracking. Each specimen receives a unique identifier
+ensuring proper attribution of results. Laboratory order creation, specimen collection, and result entry
+will be treated as transactional operations to maintain consistency across related tables.
+Laboratory personnel perform tests and enter results. For quantitative tests, results include measured
+value, unit of measurement, and reference range. For qualitative tests, predefined result options are
+selected. The system automatically compares numeric results against reference ranges which vary by
+patient age and gender, flagging abnormal results. Critical results indicating dangerous conditions are
+specially flagged and generate immediate alerts requiring physician acknowledgment. Results undergo
+verification by laboratory directors before release to ordering physicians.
+Patient Consent and Access Authorization
+A fundamental principle of MediChain is that patients own their medical information and control who
+accesses it. When patients wish to grant healthcare providers access, they create consent records
+specifying the provider, level of access, purpose, and temporal restrictions. Access levels include full
+access to all records, partial access restricted to specific record types, or emergency-only access.
+Purposes include ongoing treatment, consultation, insurance claim processing, research participation,
+or legal purposes. Patients can specify effective dates and optional expiration dates.
+All consent decisions are recorded with complete details including patient, provider, access level,
+purpose, effective date, expiration date, and creation timestamp. Patients can view all active consents
+and revoke consent at any time, with revocation immediately effective. The system enforces consent
+policies by verifying active consent exists before allowing record access, checking expiration status,
+confirming requested information type is covered, and validating access purpose matches consent
+purpose.
+Emergency Access and Critical Care Override
+Medical emergencies create situations where immediate record access is necessary without prior
+consent. The system implements a controlled emergency access mechanism allowing healthcare
+providers to override consent restrictions in true emergencies while maintaining accountability. When a
+doctor invokes emergency access, they specify the emergency type, provide detailed justification, and
+acknowledge that access will be logged and reviewed.
+Upon invoking emergency access, the system grants immediate access to critical medical information
+including current medications, allergies, chronic conditions, and recent laboratory results. Every
+emergency access is permanently logged with patient identification, accessing provider, timestamp,
+emergency type, justification, specific records viewed, and duration. Following each emergency access,
+the system schedules compliance committee review to examine whether access was justified and
+appropriate. Patients are notified after emergency access occurs, receiving information about when
+their records were accessed, by whom, for what emergency, and how to review details or file
+complaints.
+Comprehensive Audit Trail and Data Integrity Assurance
+To ensure accountability, detect unauthorized access, support regulatory compliance, and provide
+transparency, MediChain maintains meticulous logs of virtually every system action. User login
+attempts are recorded with date, time, username, IP address, device type, and success status. Every
+patient record access is logged with patient identification, specific records viewed, accessing user,
+authorizing consent, stated purpose, timestamp, and view duration.
+When medical records are created, modified, or deleted, these operations are logged capturing record
+type, before and after values for modifications, performing user, timestamp, workstation, and
+explanatory notes. This creates a complete version history essential for quality assurance, medicolegal
+purposes, and detecting erroneous or fraudulent data entry.
+To prevent tampering, audit logs are protected using tamper-evident mechanisms implemented at the
+database level, allowing detection of unauthorized modifications. If anyone attempts to modify or
+delete an audit log entry, this tampering will break the verification chain and become detectable,
+providing strong assurance that the audit trail represents a true and unaltered record. The system can
+periodically verify audit chain integrity, immediately detecting discrepancies. When tampering is
+detected, security administrators are alerted to investigate.
+The audit log is designed to be immutable, meaning entries cannot be altered or removed through any
+normal system operation. Even users with administrative privileges cannot modify audit log entries
+without triggering tampering detection. This logical immutability is enforced through database triggers
+and constraints that intercept modification attempts and either block operations or generate highpriority security alerts. The combination of tamper-evident verification and immutability enforcement
+ensures the audit trail serves as a trustworthy and legally defensible record of all system activities.
+Functional Requirements Summary
+FR1: The system shall register patients with unique health IDs and demographic details.
+FR2: The system shall record clinical encounters and associate them with doctors and hospitals.
+FR3: The system shall manage prescriptions with allergy and interaction checks.
+FR4: The system shall manage laboratory test orders and results.
+FR5: The system shall enforce patient consent for data access.
+FR6: The system shall support emergency access with mandatory justification and audit logging.
+FR7: The system shall maintain immutable audit logs for all system activities.
+Non-Functional Requirements
+NFR1: The system must ensure data integrity using primary keys, foreign keys, and constraints.
+NFR2: Sensitive data access must be logged and auditable.
+NFR3: Audit logs must be tamper-evident and immutable.
+NFR4: The database must support concurrent access with transactional consistency.
+Database-Centric View of the System
+From a DBMS perspective, the system consists of core entities such as Patient, Hospital, Doctor,
+Encounter, Prescription, Medication, LaboratoryOrder, LabResult, Consent, and AuditLog. The design
+involves multiple one-to-many and many-to-many relationships, strong referential integrity constraints,
+and rule enforcement through constraints and triggers. Subsequent project tasks will focus on ER
+modeling, relational schema design, SQL query implementation, triggers, and transaction analysis.
+In subsequent project tasks, these entities and relationships will be formally represented using an
+Entity-Relationship diagram, converted into a normalized relational schema, and implemented using
+SQL Data Definition Language. Business rules described above will be enforced using primary keys,
+foreign keys, check constraints, triggers, and transactional logic. Sample SQL queries, stored
+procedures, and transaction scenarios will demonstrate correctness, concurrency handling, and
+integrity preservation.
+Business Rules and Operational Constraints
+The MediChain system operates according to business rules ensuring data accuracy, clinical safety,
+proper authorization, and operational consistency. Each patient must have a unique health
+identification number. Patient age calculated from date of birth must be consistent with the recorded
+birth date. Every prescription must be associated with exactly one patient and one prescribing doctor.
+Laboratory test results must link to valid laboratory orders. Consent records must clearly identify both
+patient and provider.
+Temporal consistency rules ensure logical date ordering. Encounter dates cannot be in the future. A
+patient's date of birth must be earlier than all encounters. Prescription start dates must precede end
+dates. Consent effective dates must precede expiration dates. Laboratory result dates must follow
+specimen collection dates.
+Clinical safety rules prevent dangerous medical errors. Patients must not be prescribed medications to
+which they have severe allergies unless the doctor provides explicit override with justification. Major
+drug interactions must trigger alerts requiring physician acknowledgment. Critical laboratory results
+must be acknowledged by ordering physicians within defined timeframes. Emergency access must
+always be logged with justification and reviewed by compliance personnel.
+Authorization and access control rules enforce proper data protection. Users can only access records
+with explicit authorization through active consent, emergency access, or assigned clinical role. Consent
+revocations take effect immediately. Audit log entries cannot be modified or deleted by any user.
+Patients have the right to view all audit log entries documenting access to their records.
+Data quality rules ensure accuracy and completeness. Mandatory data fields must be populated before
+records can be saved. All diagnosis codes must be valid ICD-10 codes from the current master list. All
+procedure codes must be valid CPT codes. Laboratory result values must be numeric for quantitative
+tests and match predefined options for qualitative tests. Contact information must conform to standard
+format requirements.
+Many of these rules will be enforced using database-level mechanisms such as foreign key constraints,
+CHECK constraints, triggers, and transaction isolation to ensure data correctness and consistency even
+under concurrent access conditions.
+ASSUMPTIONS AND LIMITATIONS
+The system assumes that all participating hospitals, laboratories, and pharmacies are registered within
+the MediChain platform and comply with standardized data entry protocols. The project focuses on
+logical database design and correctness rather than real-time system performance at national scale.
+Security mechanisms such as encryption and authentication are considered at a conceptual level, with
+emphasis on database-level enforcement through constraints, triggers, and auditing.
+PROJECT TEAM
+Name Roll Number Role
+Saksham Verma 2024497 Database Architect & Backend Developer
+Rishabh Gupta 2024461 Application Lead & Security Lead
+Supriyo Ghosh 2024571 Frontend Developer & Data Engineer
+Each team member will be evaluated independently during demonstrations and is responsible for
+explaining the design and implementation of their assigned modules. Additionally, all three members
+will work on MySQL and will contribute to each other’s roles as well, so that we all learn through this
+course, which was the aim instructed by Professor Mukesh Mohania Sir.
+Author: Saksham Verma
